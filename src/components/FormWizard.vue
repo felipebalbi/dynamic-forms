@@ -1,5 +1,6 @@
 <template>
 <div>
+<div v-if="wizardInProgress">
   <keep-alive>
     <component
       ref="currentStep"
@@ -22,15 +23,28 @@
       >Back
     </button>
     <button
-      @click="goNext"
+      @click="nextButtonAction"
       :disabled="!canGoNext"
       class="btn"
-      >Next</button>
-    </div>
+      >{{isLastStep ? 'Complete Order' : 'Next'}}</button>
   </div>
+</div>
+<div v-else>
+  <h1 class="title">Thank you!</h1>
+  <h2 class="subtitle">
+    We look forward to shipping you your first order!
+  </h2>
+
+  <p class="text-center">
+    <a href="https://felipebalbi.com" target="_blank" class="btn">Go
+      somewhere cool</a>
+  </p>
+</div>
+</div>
 </template>
 
 <script>
+import {postFormToDB} from '../api'
 import FormPlanPicker from './FormPlanPicker'
 import FormUserDetails from './FormUserDetails'
 import FormAddress from './FormAddress'
@@ -66,6 +80,12 @@ export default {
     }
   },
   computed: {
+    isLastStep () {
+      return this.currentStepNumber === this.length
+    },
+    wizardInProgress () {
+      return this.currentStepNumber <= this.length
+    },
     length () {
       return this.steps.length
     },
@@ -77,6 +97,19 @@ export default {
     }
   },
   methods: {
+    submitOrder () {
+      postFormToDB(this.form).then(() => {
+        console.log('form submitted', this.form)
+        this.currentStepNumber++
+      })      
+    },
+    nextButtonAction () {
+      if (this.isLastStep) {
+        this.submitOrder()
+      } else {
+        this.goNext()
+      }
+    },
     processStep (step) {
       Object.assign(this.form, step.data)
       this.canGoNext = step.valid
@@ -90,7 +123,6 @@ export default {
       this.$nextTick(() => {
         this.canGoNext = !this.$refs.currentStep.$v.$invalid
       })
-      // this.canGoNext = false
     }
   }
 }
