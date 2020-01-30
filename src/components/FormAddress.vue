@@ -29,8 +29,14 @@
       return {
         form: {
           address: null,
-          recipient: null
+          recipient: this.wizardData.name
         }
+      }
+    },
+    props: {
+      wizardData: {
+        type: Object,
+        required: true
       }
     },
     validations: {
