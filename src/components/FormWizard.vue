@@ -1,6 +1,6 @@
 <template>
 <div>
-<div v-if="wizardInProgress">
+<div v-if="wizardInProgress" v-show="asyncState !== 'pending'">
   <keep-alive>
     <component
       ref="currentStep"
@@ -34,11 +34,18 @@
   <h2 class="subtitle">
     We look forward to shipping you your first order!
   </h2>
-
+  
   <p class="text-center">
     <a href="https://felipebalbi.com" target="_blank" class="btn">Go
       somewhere cool</a>
   </p>
+</div>
+
+<div class="loading-wrapper" v-if="asyncState === 'pending'">
+  <div class="loader">
+    <img src="/spinner.svg" alt=""/>
+    <p>Please wait, we're fetching data</p>
+  </div>
 </div>
 </div>
 </template>
@@ -61,6 +68,7 @@ export default {
     return {
       currentStepNumber: 1,
       canGoNext: false,
+      asyncState: null,
       steps: [
         'FormPlanPicker',
         'FormUserDetails',
@@ -98,7 +106,10 @@ export default {
   },
   methods: {
     submitOrder () {
+      this.asyncState = 'pending'
+
       postFormToDB(this.form).then(() => {
+        this.asyncState = 'success'
         console.log('form submitted', this.form)
         this.currentStepNumber++
       })      
