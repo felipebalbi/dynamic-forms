@@ -9,7 +9,7 @@
   <form v-if="!loggedIn" @input="submit" class="form">
     <div class="form-group">
       <label class="form-label" for="email">Email</label>
-      <input type="text" @input="checkIfUserExists" v-model="$v.form.email.$model" placeholder="your@email.com" class="form-control" id="email">
+      <input type="text" @blur="checkIfUserExists" v-model="$v.form.email.$model" placeholder="your@email.com" class="form-control" id="email">
       <div v-if="$v.form.email.$error && !$v.form.email.required" class="error">email is required</div>
       <div v-if="$v.form.email.$error && !$v.form.email.email" class="error">email is invalid</div>
     </div>
@@ -80,14 +80,18 @@ export default {
   methods: {
     checkIfUserExists () {
       if (!this.$v.form.email.$invalid) {
+        this.$emit('updateAsyncState', 'pending')
+      
         return checkIfUserExistsInDB(this.form.email)
           .then(() => {
             this.existingUser = true
             this.emailCheckedInDB = true
+            this.$emit('updateAsyncState', 'success')
           })
           .catch(() => {
             this.existingUser = false
             this.emailCheckedInDB = true
+            this.$emit('updateAsyncState', 'success')
           })
       }
     },
@@ -96,13 +100,17 @@ export default {
       this.wrongPassword = false
 
       if (!this.$v.form.password.$invalid) {
+        this.$emit('updateAsyncState', 'pending')
+
         return authenticateUser(this.form.email, this.form.password)
           .then(user => {
             this.form.name = user.name
             this.submit()
+            this.$emit('updateAsyncState', 'success')
           })
           .catch(() => {
             this.wrongPassword = true
+            this.$emit('updateAsyncState', 'success')
           })
       }
     },
